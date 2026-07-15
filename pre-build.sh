@@ -27,28 +27,29 @@ fi
 echo "Found nfqws: $NFQWS"
 echo "Found tpws: $TPWS"
 
-# 5. Удаляем старые исходники и временные файлы
+# 5. Создаём папку stage/bin, если её нет
+mkdir -p padavan-ng/trunk/stage/bin
+
+# 6. Копируем бинарники в stage/bin (ОНИ ПОПАДУТ В ОБРАЗ!)
+cp -v "$NFQWS" padavan-ng/trunk/stage/bin/nfqws
+cp -v "$TPWS" padavan-ng/trunk/stage/bin/tpws
+chmod 755 padavan-ng/trunk/stage/bin/nfqws padavan-ng/trunk/stage/bin/tpws
+
+# 7. Удаляем старые исходники, чтобы сборщик не трогал их
 rm -rf padavan-ng/trunk/user/nfqws/zapret-71.4
 rm -rf padavan-ng/trunk/user/nfqws/zapretsh-main
 rm -f padavan-ng/trunk/user/nfqws/zapret-71.4.tar.gz
 rm -f padavan-ng/trunk/user/nfqws/zapretsh-main.tar.gz
 
-# 6. Копируем наши бинарники в папку nfqws
-cp -v "$NFQWS" padavan-ng/trunk/user/nfqws/nfqws
-cp -v "$TPWS" padavan-ng/trunk/user/nfqws/tpws
-chmod 755 padavan-ng/trunk/user/nfqws/nfqws padavan-ng/trunk/user/nfqws/tpws
-
-# 7. Создаём новый Makefile, который просто копирует бинарники в stage/bin
+# 8. Создаём фиктивный Makefile, который ничего не делает
 cat > padavan-ng/trunk/user/nfqws/Makefile << 'EOF'
 all: install
 
 install:
-	@echo "Installing nfqws and tpws from pre-built binaries"
-	cp -f nfqws $(STAGEDIR)/bin/
-	cp -f tpws $(STAGEDIR)/bin/
+	@echo "nfqws and tpws already installed in stage/bin"
 
 clean:
-	@echo "Clean skipped for pre-built binaries"
+	@echo "Clean skipped"
 
 .PHONY: all install clean
 EOF
