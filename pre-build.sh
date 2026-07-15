@@ -18,12 +18,14 @@ fi
 
 echo "Found extracted zapret directory: $ZAPRET_DIR"
 
-# Находим файлы nfqws и tpws внутри распакованной папки
-NFQWS=$(find "$ZAPRET_DIR" -name "nfqws" -type f | head -1)
-TPWS=$(find "$ZAPRET_DIR" -name "tpws" -type f | head -1)
+# Теперь явно указываем путь к бинарникам для архитектуры mipsel
+NFQWS="$ZAPRET_DIR/binaries/linux-mipsel/nfqws"
+TPWS="$ZAPRET_DIR/binaries/linux-mipsel/tpws"
 
-if [[ -z "$NFQWS" || -z "$TPWS" ]]; then
-    echo "ERROR: nfqws or tpws not found in archive"
+if [[ ! -f "$NFQWS" || ! -f "$TPWS" ]]; then
+    echo "ERROR: nfqws or tpws not found in $ZAPRET_DIR/binaries/linux-mipsel/"
+    # Выводим содержимое папки для диагностики
+    ls -la "$ZAPRET_DIR/binaries/"
     exit 1
 fi
 
