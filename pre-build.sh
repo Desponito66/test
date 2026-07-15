@@ -22,4 +22,9 @@ rm -rf padavan-ng/trunk/user/nfqws/zapret-71.4
 # Копируем новые исходники (переименовываем папку, чтобы Makefile нашёл)
 cp -r /tmp/zapret-72.12 padavan-ng/trunk/user/nfqws/zapret-71.4
 
+# Убираем флаги LTO из Makefile, чтобы компиляция прошла
+echo "=== Patching Makefiles to remove LTO flags ==="
+find padavan-ng/trunk/user/nfqws/zapret-71.4 -name "Makefile" -exec sed -i 's/-flto=auto//g' {} \;
+find padavan-ng/trunk/user/nfqws/zapret-71.4 -name "Makefile" -exec sed -i 's/-flto//g' {} \;
+
 echo "=== Source update complete ==="
