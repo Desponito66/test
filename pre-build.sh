@@ -1,21 +1,19 @@
 #!/bin/bash
 
-echo "=== Updating zapret with pre-built binaries ==="
+echo "=== Installing pre-built nfqws and tpws ==="
 
 # 1. Скачиваем архив с бинарниками
 wget -O /tmp/zapret.tar.gz https://github.com/bol-van/zapret/releases/download/v72.12/zapret-v72.12-openwrt-embedded.tar.gz
-
-# 2. Распаковываем
 tar -xzf /tmp/zapret.tar.gz -C /tmp/
 
-# 3. Находим папку
+# 2. Находим папку
 ZAPRET_DIR=$(find /tmp -maxdepth 1 -type d -name "zapret*" | head -1)
 if [[ -z "$ZAPRET_DIR" ]]; then
     echo "ERROR: Could not find extracted zapret directory"
     exit 1
 fi
 
-# 4. Проверяем наличие бинарников для mipsel
+# 3. Проверяем наличие бинарников для mipsel
 NFQWS="$ZAPRET_DIR/binaries/linux-mipsel/nfqws"
 TPWS="$ZAPRET_DIR/binaries/linux-mipsel/tpws"
 if [[ ! -f "$NFQWS" || ! -f "$TPWS" ]]; then
@@ -27,29 +25,36 @@ fi
 echo "Found nfqws: $NFQWS"
 echo "Found tpws: $TPWS"
 
-# 5. Создаём папку stage/bin, если её нет
-mkdir -p padavan-ng/trunk/stage/bin
+# 4. Копируем бинарники в папку user/nfqws (для стандартной сборки)
+cp -v "$NFQWS" padavan-ng/trunk/user/nfqws/nfqws
+cp -v "$TPWS" padavan-ng/trunk/user/nfqws/tpws
+chmod 755 padavan-ng/trunk/user/nfqws/nfqws padavan-ng/trunk/user/nfqws/tpws
 
-# 6. Копируем бинарники в stage/bin (ОНИ ПОПАДУТ В ОБРАЗ!)
-cp -v "$NFQWS" padavan-ng/trunk/stage/bin/nfqws
-cp -v "$TPWS" padavan-ng/trunk/stage/bin/tpws
-chmod 755 padavan-ng/trunk/stage/bin/nfqws padavan-ng/trunk/stage/bin/tpws
+# 5. Создаём папку romfs/usr/bin, если её нет, и копируем туда (прямое добавление в образ)
+mkdir -p padavan-ng/trunk/romfs/usr/bin
+cp -v padavan-ng/trunk/user/nfqws/nfqws padavan-ng/trunk/romfs/usr/bin/
+cp -v padavan-ng/trunk/user/nfqws/tpws padavan-ng/trunk/romfs/usr/bin/
 
-# 7. Удаляем старые исходники, чтобы сборщик не трогал их
+# 6. Удаляем исходники zapret-71.4, чтобы не компилировались
 rm -rf padavan-ng/trunk/user/nfqws/zapret-71.4
 rm -rf padavan-ng/trunk/user/nfqws/zapretsh-main
 rm -f padavan-ng/trunk/user/nfqws/zapret-71.4.tar.gz
 rm -f padavan-ng/trunk/user/nfqws/zapretsh-main.tar.gz
 
-# 8. Создаём фиктивный Makefile, который ничего не делает
+# 7. Переписываем Makefile, чтобы он копировал бинарники в stage/bin
 cat > padavan-ng/trunk/user/nfqws/Makefile << 'EOF'
+TOPDIR=$(CURDIR)/../..
+STAGEDIR=$(TOPDIR)/stage
+
 all: install
 
 install:
-	@echo "nfqws and tpws already installed in stage/bin"
+	@echo "Installing nfqws and tpws from pre-built binaries"
+	install -m 755 nfqws $(STAGEDIR)/bin/
+	install -m 755 tpws $(STAGEDIR)/bin/
 
 clean:
-	@echo "Clean skipped"
+	@echo "Clean skipped for pre-built binaries"
 
 .PHONY: all install clean
 EOF
